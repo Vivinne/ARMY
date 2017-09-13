@@ -1,8 +1,11 @@
 var isBuild = false;
 var FPS = 60;
 var enemies = []; //存放Enemy的陣列
+var towers = [];
 var clock = 0; //紀錄時間
 var hp = 100;
+var score = 0;
+var money = 100;
 
 // 畫筆
 var canvas = document.getElementById('game-canvas');
@@ -38,24 +41,40 @@ var enemyPath = [
 	{x:544, y:96}
 ];
 
-var tower = {
-	x:640,
-	y: 480,
-	range : 321,
-	aimingEnemyId :null,
-	searchEnemyId : function () {
+function Tower () {
+	this.x = 640;
+	this.y = 480;
+	this.range = 321;
+	this.aimingEnemyId = null;
+	this.fireRate = 1;
+	this.readyToShootTime = 1;
+	this.damage = 5;
+	this.shoot = function(){
+		ctx.strokeStyle = "#FF77FF";
+		ctx.lineWidth = 3;
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.moveTo(this.x + 16, this.y + 16);
+		ctx.lineTo(enemies[this.aimingEnemyId].x + 16, enemies[this.aimingEnemyId].y + 16,) 
+	};
+	this.searchEnemyId = function () {
+		this.readyToShootTime -= 1/FPS;
 		for (var i = 0; i < enemies.length; i++) {
 			var distance = Math.sqrt(
 				Math.pow(this.x - enemies[i].x, 2) + Math.pow(this.y - enemies[i].y, 2)
 				);
 			if(distance <= this.range){
 				this.aimingEnemyId = i;
+				if (this.readyToShootTime <= 0) {
+					this.shoot();
+					this.readyToShootTime = this.fireRate;
+				}
 				return;
 			}
 		}
 		this.aimingEnemyId = null;
-	}
-}
+	};
+};
 
 // 敵人"類別"
 function Enemy(speed) {
@@ -114,13 +133,6 @@ var cursor = {
 	y: 0
 }
 
-// 塔物件
-var tower = {
-	x: 640,
-	y: 480
-}
-
-
 // draw();
 // setTimeout(draw, 1000);
 setInterval(draw, 1000/FPS);
@@ -147,7 +159,17 @@ function draw() {
 	
 	// ctx.drawImage(enemyImg, enemy.x, enemy.y);
 	ctx.drawImage(towerBtnImg, 640-64, 480-64, 64, 64);
-	ctx.drawImage(towerImg, tower.x, tower.y);
+
+	for (var i = 0; i < towers.length; i++) {
+		ctx.drawImage(towerImg, towers[i].x, towers.y);
+		towers[i].searchEnemy();
+		if(tower[i].searchEnemy != null) {
+			ctx.drawImage(crosshairImg,
+							enemies[towers[i].aimingEnemyId].x,
+							enemies[towers[i].aimingEnemyId].y);
+
+		}
+	}
 	
 	if (isBuild) {
 		ctx.drawImage(towerImg, cursor.x - 16, cursor.y - 16);
@@ -156,14 +178,12 @@ function draw() {
 	
 	ctx.font = "24px Arial";
 	ctx.fillStyle = "#FFFFFF" ;
-	ctx.fillText("HP" + hp, 50, 50);
+	ctx.fillText("HP : " + hp, 16, 32);
+	ctx.fillText("Score : " + score, 16, 64);
+	ctx.fillText("Money : " + money, 16, 96);
 
 
-	tower.searchEnemyId();
-	if (tower.aimingEnemyId !== null) {
-		var id = tower.aimingEnemyId;
-		ctx.drawImage(crosshair, enemies[id].x, enemies[id].y);
-	}
+	
 }
 
 // 是否涵蓋
@@ -192,8 +212,13 @@ $("#game-canvas").on("click", function(){
 		isBuild = true;
 	}else{
 		if(isBuild){
-			tower.x = Math.floor(cursor.x/32) *32;
-			tower.y = Math.floor(cursor.y/32) *32;
+			if (money >= 10) {
+				money -=25;
+				var newTower = new Tower();
+				newTower.x = Math.floor(cursor.x/32) *32;
+				newTower.y = Math.floor(cursor.y/32) *32;
+				towers.push(newTower);
+			}
 		}
 		isBuild = false;
 	}
