@@ -41,7 +41,7 @@ var enemyPath = [
 	{x:544, y:96}
 ];
 
-function Tower () {
+function tower () {
 	this.x = 640;
 	this.y = 480;
 	this.range = 321;
@@ -49,14 +49,18 @@ function Tower () {
 	this.fireRate = 1;
 	this.readyToShootTime = 1;
 	this.damage = 5;
-	this.shoot = function(){
+	this.shoot = function(id){
 		ctx.strokeStyle = "#FF77FF";
 		ctx.lineWidth = 3;
-		ctx.stroke();
+		
 		ctx.beginPath();
 		ctx.moveTo(this.x + 16, this.y + 16);
 		ctx.lineTo(enemies[this.aimingEnemyId].x + 16, enemies[this.aimingEnemyId].y + 16,) 
+		ctx.stroke();
+	enemies[this.aimingEnemyId].hp = enemies[this.aimingEnemyId].hp - this.damage;
 	};
+	
+
 	this.searchEnemyId = function () {
 		this.readyToShootTime -= 1/FPS;
 		for (var i = 0; i < enemies.length; i++) {
@@ -135,7 +139,7 @@ var cursor = {
 
 // draw();
 // setTimeout(draw, 1000);
-setInterval(draw, 1000/FPS);
+var IntervalId = setInterval(draw, 1000/FPS);
 
 
 function draw() {
@@ -149,8 +153,10 @@ function draw() {
 
 
 	for (var i = 0; i < enemies.length; i++) { //讓enemies陣列裡物件依序被挑出來
-		if (enemies[i].hp == 0) {
-			enemies.splice(i, 1)
+		if (enemies[i].hp <= 0) {
+			enemies.splice(i, 1);
+			score += 10;
+			money += 50;
 		} else {
 		enemies[i].move(); //執行move
 		ctx.drawImage(enemyImg, enemies[i].x, enemies[i].y);
@@ -161,10 +167,10 @@ function draw() {
 	ctx.drawImage(towerBtnImg, 640-64, 480-64, 64, 64);
 
 	for (var i = 0; i < towers.length; i++) {
-		ctx.drawImage(towerImg, towers[i].x, towers.y);
-		towers[i].searchEnemy();
-		if(tower[i].searchEnemy != null) {
-			ctx.drawImage(crosshairImg,
+		ctx.drawImage(towerImg, towers[i].x, towers[i].y);
+		towers[i].searchEnemyId();
+		if( towers[i].aimingEnemyId != null) {
+			ctx.drawImage(crosshair,
 							enemies[towers[i].aimingEnemyId].x,
 							enemies[towers[i].aimingEnemyId].y);
 
@@ -181,6 +187,10 @@ function draw() {
 	ctx.fillText("HP : " + hp, 16, 32);
 	ctx.fillText("Score : " + score, 16, 64);
 	ctx.fillText("Money : " + money, 16, 96);
+
+	if(hp <= 0){
+		clearInterval(IntervalId);
+	}
 
 
 	
@@ -214,7 +224,7 @@ $("#game-canvas").on("click", function(){
 		if(isBuild){
 			if (money >= 10) {
 				money -=25;
-				var newTower = new Tower();
+				var newTower = new tower();
 				newTower.x = Math.floor(cursor.x/32) *32;
 				newTower.y = Math.floor(cursor.y/32) *32;
 				towers.push(newTower);
